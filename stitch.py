@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 ### Task 1 ###
 # def generate_obj_pts():
@@ -176,3 +176,11 @@ Conslusion
 ###
 
 ### Task 4 ###
+img1_pts = [[295, 392], [457, 295], [771, 346], [1065, 464], [981, 339], [790, 703]]
+img2_pts = [[420, 384], [569, 290], [880, 340], [1192, 463], [1102, 375], [899, 703]]
+
+homography_matrix = find_transformation_matrix(img1_pts, img2_pts)
+print(homography_matrix)
+
+### Task 5 ###
+
