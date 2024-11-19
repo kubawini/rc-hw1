@@ -91,20 +91,21 @@ import matplotlib.pyplot as plt
 
 
 ### Task 2 ###
-# def project_img(img, transformation):
-#     inv_transf = np.linalg.inv(transformation)
-#     height, width, _ = img.shape
-#     result_img = np.zeros(img.shape, dtype=np.uint8)
-#     for x in range(width):
-#         for y in range(height):
-#             x_cart, y_cart = x, height - y - 1  # Cartesian coordinates
-#             p2_norm = np.array([x_cart, y_cart, 1])
-#             p1 = inv_transf @ p2_norm
-#             p1[1] = -p1[1] + height - 1
-#             p1_norm = np.array(np.rint(p1 / p1[2]), dtype=np.int_)
-#             if width > p1_norm[0] >= 0 and 0 <= p1_norm[1] < height:
-#                 result_img[y, x] = img[p1_norm[1], p1_norm[0]]
-#     return result_img
+def project_img(img, transformation):
+    inv_transf = np.linalg.inv(transformation)
+    height, width, _ = img.shape
+    result_img = np.zeros(img.shape, dtype=np.uint8)
+    for x in range(width):
+        for y in range(height):
+            x_cart, y_cart = x, height - y - 1  # Cartesian coordinates
+            p2_norm = np.array([x_cart, y_cart, 1])
+            p1 = inv_transf @ p2_norm
+            p1 = p1 / p1[2]
+            p1[1] = -p1[1] + height - 1
+            p1 = np.array(np.rint(p1 / p1[2]), dtype=np.int_)
+            if width > p1[0] >= 0 and 0 <= p1[1] < height:
+                result_img[y, x] = img[p1[1], p1[0]]
+    return result_img
 #
 #
 # img1 = cv2.imread(f"calibration/img1.png")
@@ -176,11 +177,19 @@ Conslusion
 ###
 
 ### Task 4 ###
-img1_pts = [[295, 392], [457, 295], [771, 346], [1065, 464], [981, 339], [790, 703]]
+img1 = cv2.imread('stitching/img1.png')
+
+img1_pts = [[295, 392], [457, 295], [771, 346], [1065, 464], [981, 380], [790, 703]]
 img2_pts = [[420, 384], [569, 290], [880, 340], [1192, 463], [1102, 375], [899, 703]]
 
 homography_matrix = find_transformation_matrix(img1_pts, img2_pts)
 print(homography_matrix)
+# homography_matrix = np.array([[2,0,0],[0,2,0],[0,0,2]])
+
+# homography_matrix = np.array([[1, 0, 100], [0, 1, 100], [0, 0, 1]])
+img = project_img(img1, homography_matrix)
+cv2.imshow('img', img)
+cv2.waitKey(0)
 
 ### Task 5 ###
 
