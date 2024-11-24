@@ -114,13 +114,8 @@ def transform_shape(x_cart, y_cart, transformation_matrix):
 def project_img(img, transformation):
     inv_transf = np.linalg.inv(transformation)
     width, height, x0, y0 = transform_shape(img.shape[1], img.shape[0], transformation)
-    print(img.shape)
-    print(height, width)
-    # height = 792
-    # height, width, _ = img.shape
     input_height, input_width = img.shape[:2]
     result_img = np.zeros((height, width, 3), dtype=np.uint8)
-    # result_img = np.zeros(img.shape, dtype=np.uint8)
     for x in range(width):
         for y in range(height):
             x_cart, y_cart = x - x0, y0 - y - 1  # Cartesian coordinates
@@ -131,7 +126,7 @@ def project_img(img, transformation):
             p1 = np.array(p1 / p1[2], dtype=np.int_)
             if input_width > p1[0] >= 0 and 0 <= p1[1] < input_height:
                 result_img[y, x] = img[p1[1], p1[0]]
-    return result_img
+    return result_img, x0, y0
 #
 #
 # img1 = cv2.imread(f"calibration/img1.png")
@@ -233,10 +228,10 @@ def find_stitched_boundaries(points):
     sort_y = points.copy()
     sort_x.sort(key=lambda p: p[0])
     sort_y.sort(key=lambda p: p[1])
-    xb, xe = sort_x[1][0], sort_x[-1][0]
-    ye, yb = sort_y[3][1], sort_y[4][1]
-    yb = -yb + 720 - 1
-    ye = -ye + 720 - 1
+    xb, xe = sort_x[0][0], sort_x[-1][0]
+    ye, yb = sort_y[0][1], sort_y[-1][1]
+    # yb = -yb + 720 - 1
+    # ye = -ye + 720 - 1
     return int(xb), int(xe), int(yb), int(ye)
 
 
@@ -245,82 +240,142 @@ def find_overlapping_boundaries(points):
     sort_y = points.copy()
     sort_x.sort(key=lambda p: p[0])
     sort_y.sort(key=lambda p: p[1])
-    xb, xe = sort_x[3][0], sort_x[5][0]
+    xb, xe = sort_x[3][0], sort_x[4][0]
     ye, yb = sort_y[3][1], sort_y[4][1]
-    yb = -yb + 720 - 1
-    ye = -ye + 720 - 1
+    # yb = -yb + 720 - 1
+    # ye = -ye + 720 - 1
     return int(xb), int(xe), int(yb), int(ye)
 
 
 def find_cutting_line(img1, img2_transformed, ops):
     diffs = np.zeros((ops[3] - ops[2], ops[1] - ops[0]))
-    for i in range(ops[2], ops[3] + 1):
+    for i in range(ops[2], ops[3]):
         for j in range(ops[0], ops[1]):
             diffs_i = i - ops[2]
             diffs_j = j - ops[0]
-            diffs[diffs_i, diffs_j] = (np.sum(img1[i,j]) - np.sum(img2_transformed[i,j]))**2 # TODO change color scale and problem with i, j
+            if img2_transformed[i,j,0] != 0:
+                red = abs(float(img1[i,j,2]) - float(img2_transformed[i,j,2]))
+                green = abs(float(img1[i,j,1]) - float(img2_transformed[i,j,1]))
+                blue = abs(float(img1[i,j,0]) - float(img2_transformed[i,j,0]))
+                sum = 0.3 * red + 0.59 * green + 0.11 * blue
+                diffs[diffs_i, diffs_j] = sum**2
 
     costs = np.zeros((ops[3] - ops[2], ops[1] - ops[0]))
     costs[0, :] = diffs[0, :]
-    for i in range(ops[2] + 1, ops[3] + 1):
-        for j in range(ops[0], ops[1]+1):
+    for i in range(ops[2], ops[3]):
+        for j in range(ops[0], ops[1]):
             diffs_i = i - ops[2]
             diffs_j = j - ops[0]
-            prev_left = diffs[diffs_i - 1, diffs_j - 1] if diffs_j != ops[0] else float('inf')
+            prev_left = float('inf')
+            if j > ops[0]:
+                prev_left = diffs[diffs_i - 1, diffs_j - 1]
+            prev_right = float('inf')
+            if j + 1 < ops[1]:
+                prev_right = diffs[diffs_i - 1, diffs_j + 1]
             prev_up = diffs[diffs_i - 1, diffs_j]
-            prev_right = diffs[diffs_i - 1, diffs_j + 1] if diffs_j != ops[1] else float('inf')
-            costs[i, j] = diffs[diffs_i, diffs_j] + min(prev_left, prev_up, prev_right)
+            prev = min(prev_left, prev_up, prev_right)
+            if img2_transformed[i, j, 0] != 0:
+                costs[diffs_i, diffs_j] = diffs[diffs_i, diffs_j] + prev
 
     result = []
-    for i in range(ops[2] + 1, ops[3] + 1):
-        min = float('inf')
-        min_index = -1
-        for j in range(ops[0], ops[1]+1):
-            diffs_i = i - ops[2]
-            diffs_j = j - ops[0]
-            if costs[diffs_i, diffs_j] < min:
-                min = costs[diffs_i, diffs_j]
-                min_index = j
-            result.append(min_index)
+    j = np.argmin(costs[ops[3]-ops[2]-1, :])
+    result.append(j)
+    for i in reversed(range(ops[2] + 1, ops[3]-1)):
+        min_prev_ind = j
+        diffs_i = i - ops[2]
+        diffs_j = j - ops[0]
+        min_prev = costs[diffs_i, diffs_j]
+        if diffs_j - 1 >= 0:
+            if costs[diffs_i, diffs_j - 1] < min_prev:
+                min_prev = costs[diffs_i, diffs_j - 1]
+                j = min_prev_ind - 1
+        if diffs_j + 1 < ops[1] - ops[0]:
+            if costs[diffs_i, diffs_j + 1] < min_prev:
+                min_prev = costs[diffs_i, diffs_j + 1]
+                j = min_prev_ind + 1
+        result.append(j)
 
-    return result
+    return list(reversed(result))
+
+    # for i in range(ops[2] + 1, ops[3]):
+    #     min_cost = float('inf')
+    #     min_index = -1
+    #     for j in range(ops[0], ops[1]):
+    #         diffs_i = i - ops[2]
+    #         diffs_j = j - ops[0]
+    #         if costs[diffs_i, diffs_j] <= min_cost:
+    #             min_cost = costs[diffs_i, diffs_j]
+    #             min_index = j
+    #         result.append(min_index)
+    #
+    # return result
 
 
-def stitch(img1, img2_transformed, bps, ops, line):
-    result_img = np.zeros((bps[1] - bps[0], bps[3] - bps[2]))
-    ops[2] = -ops[2] + 720 - 1
-    ops[3] = -ops[3] + 720 - 1
-    bps[2] = -bps[2] + 720 - 1
-    bps[3] = -bps[3] + 720 - 1
-    result_img[bps[0]:ops[0], bps[2]:bps[3]] = img1[bps[0]:ops[0], bps[2]:bps[3]]
-    result_img[ops[1] + 1, bps[1], bps[2]:bps[3]] = img2_transformed[ops[1] + 1, bps[1], bps[2]:bps[3]]
-    for i in range(ops[2] + 1, ops[3] + 1):
+def stitch(img1, img2_transformed, bps, ops, line, c):
+    result_img = np.zeros(img2_transformed.shape, dtype=np.uint8)
+    # ops[2] = -ops[2] + 720 - 1
+    # ops[3] = -ops[3] + 720 - 1
+    # bps[2] = -bps[2] + 720 - 1
+    # bps[3] = -bps[3] + 720 - 1
+    result_img[:, bps[0]:ops[0]] = img1[:, bps[0]:ops[0]]
+    result_img[:, ops[1] + 1:bps[1]] = img2_transformed[:, ops[1] + 1:bps[1]]
+    for i in range(ops[2] + 1):
         for j in range(ops[0], ops[1] + 1):
-            if j <= line[i]:
+            if img2_transformed[i, j, 0] > 0 and img2_transformed[i, j, 1] > 0 and img2_transformed[i, j, 2] > 0:
+                result_img[i, j] = img2_transformed[i,j]
+            else:
+                result_img[i, j] = img1[i,j]
+
+    for i in range(ops[2] + 1, ops[3] + 1):
+        diffs_i = i - ops[2] - 2
+        print(line[diffs_i])
+        for j in range(ops[0], ops[1] + 1):
+            if j < line[diffs_i]:
                 result_img[i, j] = img1[i, j]
+            # elif j==line[diffs_i]:
+            #   result_img[i, j] = np.array([0,0,255])
             else:
                 result_img[i, j] = img2_transformed[i, j]
+
+    for i in range(ops[3] + 1, result_img.shape[0]):
+        for j in range(ops[0], ops[1] + 1):
+            if img2_transformed[i, j, 0] > 0 and img2_transformed[i, j, 1] > 0 and img2_transformed[i, j, 2] > 0:
+                result_img[i, j] = img2_transformed[i,j]
+            else:
+                result_img[i, j] = img1[i,j]
+    # result_img = img2_transformed.copy()
+    # result_img[c:img1.shape[0]+c, 0:img1.shape[1]] = img1
     return  result_img
 
 
+def reshape_img(img, shape, x0, y0):
+    print('x0: ', x0)
+    result = np.zeros(shape, dtype=np.uint8)
+    result[y0-img.shape[0]:y0, x0:x0+img.shape[1]] = img
+    return result
+
 def stitch_images_manual(img1, img2, pts1, pts2):
     homography_matrix = find_transformation_matrix(pts1, pts2)
-    img2_transformed = project_img(img2, homography_matrix)
-    cv2.imshow('img', img2_transformed)
-    cv2.waitKey(0)
+    img2_transformed, x0, y0 = project_img(img2, homography_matrix)
     p1, p2, p3, p4 = find_transformed_corners(img2, homography_matrix)
     p5, p6, p7, p8 = find_transformed_corners(img1, np.eye(3))
     points = [p1, p2, p3, p4, p5, p6, p7, p8]
     b1, b2, b3, b4 = find_stitched_boundaries(points)
+    b3 = -b3 + y0
+    b4 = -b4 + y0
     bps = [b1, b2, b3, b4]
     o1, o2, o3, o4 = find_overlapping_boundaries(points)
+    o3 = -o3 + y0 - 1
+    o4 = -o4 + y0 - 1
     ops = [o1, o2, o3, o4]
+    img1 = reshape_img(img1, img2_transformed.shape, x0, y0)
     line = find_cutting_line(img1, img2_transformed, ops)
-    result_img = stitch(img1, img2_transformed, bps, ops, line)
+    result_img = stitch(img1, img2_transformed, bps, ops, line, y0-img1.shape[0])
     return result_img
 
 
 img2 = cv2.imread('stitching/img2.png')
-img = stitch_images_manual(img1, img2, img1_pts, img2_pts)
+img = stitch_images_manual(img2, img1, img1_pts, img2_pts)
 cv2.imshow('img', img)
 cv2.waitKey(0)
+
