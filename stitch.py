@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 ### Task 1 ###
 # def generate_obj_pts():
@@ -95,9 +94,7 @@ Sprawdzić projection error (albo jakąś własną modyfikację, bo być może p
 def transform_shape(x_cart, y_cart, transformation_matrix):
     v = np.array([[x_cart, y_cart, 1], [0, 0, 1], [0, y_cart, 1], [x_cart, 0, 1]])
     res = transformation_matrix @ v.T
-    print(res)
     res_norm = res / res[2]
-    print(res_norm)
     max_x = np.max(res_norm[0])
     min_x = np.min(res_norm[0])
     min_x = min(min_x, 0)
@@ -204,7 +201,6 @@ img1_pts = [[295, 392], [457, 295], [771, 346], [1065, 464], [981, 380], [790, 7
 img2_pts = [[420, 384], [569, 290], [880, 340], [1192, 463], [1102, 375], [899, 703]]
 #
 # homography_matrix = find_transformation_matrix(img1_pts, img2_pts)
-# print(homography_matrix)
 # # homography_matrix = np.array([[2,0,0],[0,2,0],[0,0,2]])
 #
 # # homography_matrix = np.array([[1, 0, 100], [0, 1, 100], [0, 0, 1]])
@@ -230,8 +226,6 @@ def find_stitched_boundaries(points):
     sort_y.sort(key=lambda p: p[1])
     xb, xe = sort_x[0][0], sort_x[-1][0]
     ye, yb = sort_y[0][1], sort_y[-1][1]
-    # yb = -yb + 720 - 1
-    # ye = -ye + 720 - 1
     return int(xb), int(xe), int(yb), int(ye)
 
 
@@ -242,8 +236,6 @@ def find_overlapping_boundaries(points):
     sort_y.sort(key=lambda p: p[1])
     xb, xe = sort_x[3][0], sort_x[4][0]
     ye, yb = sort_y[3][1], sort_y[4][1]
-    # yb = -yb + 720 - 1
-    # ye = -ye + 720 - 1
     return int(xb), int(xe), int(yb), int(ye)
 
 
@@ -291,32 +283,14 @@ def find_cutting_line(img1, img2_transformed, ops):
                 j = min_prev_ind - 1
         if diffs_j + 1 < ops[1] - ops[0]:
             if costs[diffs_i, diffs_j + 1] < min_prev:
-                min_prev = costs[diffs_i, diffs_j + 1]
                 j = min_prev_ind + 1
         result.append(j)
 
     return list(reversed(result))
 
-    # for i in range(ops[2] + 1, ops[3]):
-    #     min_cost = float('inf')
-    #     min_index = -1
-    #     for j in range(ops[0], ops[1]):
-    #         diffs_i = i - ops[2]
-    #         diffs_j = j - ops[0]
-    #         if costs[diffs_i, diffs_j] <= min_cost:
-    #             min_cost = costs[diffs_i, diffs_j]
-    #             min_index = j
-    #         result.append(min_index)
-    #
-    # return result
-
 
 def stitch(img1, img2_transformed, bps, ops, line, c):
     result_img = np.zeros(img2_transformed.shape, dtype=np.uint8)
-    # ops[2] = -ops[2] + 720 - 1
-    # ops[3] = -ops[3] + 720 - 1
-    # bps[2] = -bps[2] + 720 - 1
-    # bps[3] = -bps[3] + 720 - 1
     result_img[:, bps[0]:ops[0]] = img1[:, bps[0]:ops[0]]
     result_img[:, ops[1] + 1:bps[1]] = img2_transformed[:, ops[1] + 1:bps[1]]
     for i in range(ops[2] + 1):
@@ -328,12 +302,9 @@ def stitch(img1, img2_transformed, bps, ops, line, c):
 
     for i in range(ops[2] + 1, ops[3] + 1):
         diffs_i = i - ops[2] - 2
-        print(line[diffs_i])
         for j in range(ops[0], ops[1] + 1):
             if j < line[diffs_i]:
                 result_img[i, j] = img1[i, j]
-            # elif j==line[diffs_i]:
-            #   result_img[i, j] = np.array([0,0,255])
             else:
                 result_img[i, j] = img2_transformed[i, j]
 
@@ -343,13 +314,10 @@ def stitch(img1, img2_transformed, bps, ops, line, c):
                 result_img[i, j] = img2_transformed[i,j]
             else:
                 result_img[i, j] = img1[i,j]
-    # result_img = img2_transformed.copy()
-    # result_img[c:img1.shape[0]+c, 0:img1.shape[1]] = img1
     return  result_img
 
 
 def reshape_img(img, shape, x0, y0):
-    print('x0: ', x0)
     result = np.zeros(shape, dtype=np.uint8)
     result[y0-img.shape[0]:y0, x0:x0+img.shape[1]] = img
     return result
