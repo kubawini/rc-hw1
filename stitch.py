@@ -37,7 +37,7 @@ import numpy as np
 # def task1_logic(obj_points, img_points, size, img):
 #     ret, camera_mat, distortion, rotation_vecs, translation_vecs = cv2.calibrateCamera(
 #         obj_points, img_points, size, None, None)
-#     alpha = 1
+#     alpha = 0
 #     rect_camera_mat = cv2.getOptimalNewCameraMatrix(camera_mat, distortion, size, alpha)[0]
 #     map1, map2 = cv2.initUndistortRectifyMap(camera_mat, distortion, np.eye(3), rect_camera_mat, size,
 #                                              cv2.CV_32FC1)
@@ -73,6 +73,7 @@ import numpy as np
 #     all_img_points_1.append(sorted_corners_formatted)
 #     all_obj_points_1.append(generate_obj_pts())
 #
+#
 # rect_img_draw_1, rect_mat_1, _, _, _, _ = task1_logic(all_obj_points_1, all_img_points_1, size, img1)
 # # rect_img_draw_2, rect_mat_2, _, _, _, _ = task1_logic(all_obj_points_2, all_img_points_2, size, img1)
 #
@@ -81,7 +82,7 @@ import numpy as np
 # cv2.waitKey(0)
 
 # Show the image
-# cv2.imshow('img1', rect_img_draw_1)
+# cv2.imshow('img2', rect_img_draw_2)
 # cv2.waitKey(0)
 
 '''
@@ -126,7 +127,7 @@ def project_img(img, transformation):
     return result_img, x0, y0
 #
 #
-# img1 = cv2.imread(f"calibration/img1.png")
+# img1 = cv2.imread(f"calibration/calibration_img1.png")
 # transformation_matrix = np.array([[0.7071, 0.7071, 200], [-0.7071, 0.7071, 200], [0, 0.001, 2]])
 # result_img = project_img(img1, transformation_matrix)
 # cv2.imshow('img', result_img)
@@ -195,7 +196,7 @@ Conslusion
 ###
 
 ### Task 4 ###
-img1 = cv2.imread('stitching/img1.png')
+# img1 = cv2.imread('stitching/img1.png')
 
 img1_pts = [[295, 392], [457, 295], [771, 346], [1065, 464], [981, 380], [790, 703]]
 img2_pts = [[420, 384], [569, 290], [880, 340], [1192, 463], [1102, 375], [899, 703]]
@@ -342,8 +343,34 @@ def stitch_images_manual(img1, img2, pts1, pts2):
     return result_img
 
 
-img2 = cv2.imread('stitching/img2.png')
-img = stitch_images_manual(img2, img1, img1_pts, img2_pts)
+# img2 = cv2.imread('stitching/img2.png')
+# img = stitch_images_manual(img2, img1, img1_pts, img2_pts)
+# cv2.imshow('img', img)
+# cv2.waitKey(0)
+
+### Task 6 ###
+path = './img1_img2_matches.npz'
+npz = np.load(path)
+points1_arr = npz['keypoints0']
+points2_arr = npz['keypoints1']
+matches = npz['matches']
+confidence = npz['match_confidence']
+img1 = cv2.imread('undistorted/img1.png')
+img2 = cv2.imread('undistorted/img2.png')
+
+points1 = []
+points2 = []
+for i in range(len(points1_arr)):
+    if matches[i] != -1 and confidence[i] >= 0.95:
+        p1 = points1_arr[i]
+        p1[1] = 719 - p1[1]
+        p2 = points2_arr[matches[i]]
+        p2[1] = 719 - p2[1]
+        points1.append(p1)
+        points2.append(p2)
+
+difference = np.array(points1) - np.array(points2)
+
+img = stitch_images_manual(img2, img1, points1, points2)
 cv2.imshow('img', img)
 cv2.waitKey(0)
-
