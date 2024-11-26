@@ -1,85 +1,91 @@
 import cv2
 import numpy as np
 
+def undistort_everything(): # TODO add saving files
+    images = [cv2.imread(f'stitching/img{i}.png') for i in range(1, 10)]
+    for image in images:
+        rect_img_draw, _, _, _, _, _ = task1_logic(all_obj_points_1, all_img_points_1, size, image)
+        cv2.imshow('img', rect_img_draw)
+        cv2.waitKey(0)
+
 ### Task 1 ###
-# def generate_obj_pts():
-#     tag_side = 168
-#     spacing = 70
-#     rows = 2
-#     cols = 3
-#     coordinates = []
-#     for i in range(cols):
-#         for j in range(rows):
-#             p1 = [i * (tag_side + spacing), j * (tag_side + spacing), 0]
-#             p2 = [i * (tag_side + spacing), j * (tag_side + spacing) + tag_side, 0]
-#             p3 = [i * (tag_side + spacing) + tag_side, j * (tag_side + spacing) + tag_side, 0]
-#             p4 = [i * (tag_side + spacing) + tag_side, j * (tag_side + spacing), 0]
-#             coordinates.append(p1)
-#             coordinates.append(p2)
-#             coordinates.append(p3)
-#             coordinates.append(p4)
-#     return np.array(coordinates, dtype=np.float32)
-#
-#
-# def corners_to_img_pts(corners):
-#     result = []
-#     for item1 in corners:
-#         for item2 in item1:
-#             for item3 in item2:
-#                 point = []
-#                 for item4 in item3:
-#                     point.append(item4)
-#                 result.append([point])
-#     result = np.array(result, dtype=np.float32)
-#     return result
-#
-#
-# def task1_logic(obj_points, img_points, size, img):
-#     ret, camera_mat, distortion, rotation_vecs, translation_vecs = cv2.calibrateCamera(
-#         obj_points, img_points, size, None, None)
-#     alpha = 0
-#     rect_camera_mat = cv2.getOptimalNewCameraMatrix(camera_mat, distortion, size, alpha)[0]
-#     map1, map2 = cv2.initUndistortRectifyMap(camera_mat, distortion, np.eye(3), rect_camera_mat, size,
-#                                              cv2.CV_32FC1)
-#     rect_img = cv2.remap(img, map1, map2, cv2.INTER_LINEAR)
-#     rect_img_draw = rect_img.copy()
-#     return rect_img_draw, rect_camera_mat, camera_mat, distortion, rotation_vecs, translation_vecs
-#
-#
-# dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_16h5)
-# parameters = cv2.aruco.DetectorParameters()
-# detector = cv2.aruco.ArucoDetector(dictionary, parameters)
-# obj_pts = generate_obj_pts()
-# size = (1280, 720)
-# img1 = cv2.imread(f"calibration/img1.png")
-#
-# all_img_points_1 = []
-# all_img_points_2 = []
-# all_obj_points_1 = []
-# all_obj_points_2 = []
-#
-# for i in range(1, 29):
-#     img = cv2.imread(f"calibration/img{i}.png")
-#     corners, ids, _ = detector.detectMarkers(img)
-#     ids = np.array(ids.flatten())
-#     permutation = np.argsort(ids)
-#     sorted_corners = []
-#     for p in reversed(permutation):
-#         sorted_corners.append(corners[p])
-#         all_img_points_2.append(np.array(corners[p]).reshape(4, 2))
-#         all_obj_points_2.append(np.array([[0, 0, 0], [0, 168, 0], [168, 168, 0], [168, 0, 0]], dtype=np.float32))
-#
-#     sorted_corners_formatted = np.array(sorted_corners).reshape(24, 2)
-#     all_img_points_1.append(sorted_corners_formatted)
-#     all_obj_points_1.append(generate_obj_pts())
-#
-#
-# rect_img_draw_1, rect_mat_1, _, _, _, _ = task1_logic(all_obj_points_1, all_img_points_1, size, img1)
-# # rect_img_draw_2, rect_mat_2, _, _, _, _ = task1_logic(all_obj_points_2, all_img_points_2, size, img1)
-#
-# # Show the image
-# cv2.imshow('img1', rect_img_draw_1)
-# cv2.waitKey(0)
+def generate_obj_pts():
+    tag_side = 168
+    spacing = 70
+    rows = 2
+    cols = 3
+    coordinates = []
+    for i in range(cols):
+        for j in range(rows):
+            p1 = [i * (tag_side + spacing), j * (tag_side + spacing), 0]
+            p2 = [i * (tag_side + spacing), j * (tag_side + spacing) + tag_side, 0]
+            p3 = [i * (tag_side + spacing) + tag_side, j * (tag_side + spacing) + tag_side, 0]
+            p4 = [i * (tag_side + spacing) + tag_side, j * (tag_side + spacing), 0]
+            coordinates.append(p1)
+            coordinates.append(p2)
+            coordinates.append(p3)
+            coordinates.append(p4)
+    return np.array(coordinates, dtype=np.float32)
+
+
+def corners_to_img_pts(corners):
+    result = []
+    for item1 in corners:
+        for item2 in item1:
+            for item3 in item2:
+                point = []
+                for item4 in item3:
+                    point.append(item4)
+                result.append([point])
+    result = np.array(result, dtype=np.float32)
+    return result
+
+
+def task1_logic(obj_points, img_points, size, img):
+    ret, camera_mat, distortion, rotation_vecs, translation_vecs = cv2.calibrateCamera(
+        obj_points, img_points, size, None, None)
+    alpha = 0
+    rect_camera_mat = cv2.getOptimalNewCameraMatrix(camera_mat, distortion, size, alpha)[0]
+    map1, map2 = cv2.initUndistortRectifyMap(camera_mat, distortion, np.eye(3), rect_camera_mat, size,
+                                             cv2.CV_32FC1)
+    rect_img = cv2.remap(img, map1, map2, cv2.INTER_LINEAR)
+    rect_img_draw = rect_img.copy()
+    return rect_img_draw, rect_camera_mat, camera_mat, distortion, rotation_vecs, translation_vecs
+
+
+dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_16h5)
+parameters = cv2.aruco.DetectorParameters()
+detector = cv2.aruco.ArucoDetector(dictionary, parameters)
+obj_pts = generate_obj_pts()
+size = (1280, 720)
+img1 = cv2.imread(f"calibration/img1.png")
+
+all_img_points_1 = []
+all_img_points_2 = []
+all_obj_points_1 = []
+all_obj_points_2 = []
+
+for i in range(1, 29):
+    img = cv2.imread(f"calibration/img{i}.png")
+    corners, ids, _ = detector.detectMarkers(img)
+    ids = np.array(ids.flatten())
+    permutation = np.argsort(ids)
+    sorted_corners = []
+    for p in reversed(permutation):
+        sorted_corners.append(corners[p])
+        all_img_points_2.append(np.array(corners[p]).reshape(4, 2))
+        all_obj_points_2.append(np.array([[0, 0, 0], [0, 168, 0], [168, 168, 0], [168, 0, 0]], dtype=np.float32))
+
+    sorted_corners_formatted = np.array(sorted_corners).reshape(24, 2)
+    all_img_points_1.append(sorted_corners_formatted)
+    all_obj_points_1.append(generate_obj_pts())
+
+rect_img_draw_1, rect_mat_1, _, _, _, _ = task1_logic(all_obj_points_1, all_img_points_1, size, img1)
+# rect_img_draw_2, rect_mat_2, _, _, _, _ = task1_logic(all_obj_points_2, all_img_points_2, size, img1)
+
+# Show the image
+cv2.imshow('img1', rect_img_draw_1)
+cv2.waitKey(0)
 
 # Show the image
 # cv2.imshow('img2', rect_img_draw_2)
@@ -349,28 +355,78 @@ def stitch_images_manual(img1, img2, pts1, pts2):
 # cv2.waitKey(0)
 
 ### Task 6 ###
+def find_pair_points_from_file(path):
+    npz = np.load(path)
+    points1_arr = npz['keypoints0']
+    points2_arr = npz['keypoints1']
+    matches = npz['matches']
+    confidence = npz['match_confidence']
+
+    points1 = []
+    points2 = []
+    for i in range(len(points1_arr)):
+        if matches[i] != -1 and confidence[i] >= 0.95:
+            p1 = points1_arr[i]
+            p1[1] = 719 - p1[1]
+            p2 = points2_arr[matches[i]]
+            p2[1] = 719 - p2[1]
+            points1.append(p1)
+            points2.append(p2)
+    return points1, points2
+
+
 path = './img1_img2_matches.npz'
-npz = np.load(path)
-points1_arr = npz['keypoints0']
-points2_arr = npz['keypoints1']
-matches = npz['matches']
-confidence = npz['match_confidence']
 img1 = cv2.imread('undistorted/img1.png')
 img2 = cv2.imread('undistorted/img2.png')
-
-points1 = []
-points2 = []
-for i in range(len(points1_arr)):
-    if matches[i] != -1 and confidence[i] >= 0.95:
-        p1 = points1_arr[i]
-        p1[1] = 719 - p1[1]
-        p2 = points2_arr[matches[i]]
-        p2[1] = 719 - p2[1]
-        points1.append(p1)
-        points2.append(p2)
-
-difference = np.array(points1) - np.array(points2)
-
+points1, points2 = find_pair_points_from_file(path)
 img = stitch_images_manual(img2, img1, points1, points2)
 cv2.imshow('img', img)
 cv2.waitKey(0)
+
+'''
+Conclusion
+'''
+
+### Task 7 ###
+def prepare_files_and_matrices(files, paths):
+    matrices = []
+    imgs = []
+    for file in files:
+        img = cv2.imread(file)
+        imgs.append(img)
+    for path in paths:
+        homography_matrix = find_homography_matrix_from_file(path)
+        matrices.append(homography_matrix)
+    return imgs, matrices
+
+
+def find_homography_matrix_from_file(path):
+    points1, points2 = find_pair_points_from_file(path)
+    return find_transformation_matrix(points1, points2)
+
+
+def create_panorama(imgs, matrices):
+    transformed_images = transform_all_images(imgs, matrices)
+    for image in transformed_images:
+        cv2.imshow('img', image)
+        cv2.waitKey(0)
+
+
+def transform_all_images(imgs, matrices):
+    middle = int(len(imgs) / 2)
+    transformed_images = [None for _ in range(len(imgs))]
+    matrix = np.eye(3)
+    for i in range(middle, len(imgs)):
+        matrix = matrices[i] @ matrix
+        transformed_images[i] = project_img(imgs[i], matrix)
+    matrix = np.eye(3)
+    for i in reversed(range(0, middle)):
+        matrix = matrices[i] @ matrix
+        transformed_images[i] = project_img(imgs[i], matrix)
+    return transformed_images
+
+
+files = ['...']
+paths = ['...']
+images, matrices = prepare_files_and_matrices(files, paths)
+result = create_panorama(images, matrices)
