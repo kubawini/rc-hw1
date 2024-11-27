@@ -1,7 +1,5 @@
 # Image stitcher
 
----
-
 ## Prerequsities
 
 Following project is first homework for Robot Control course at MIMUW faculty (2024/25). Below there is presented a
@@ -15,8 +13,6 @@ between `# --- execution ---` marks between `### Task {i} ###` and `### Task {i+
 functions if mentioned.
 
 ## Task 1
-
----
 
 ### How to run?
 
@@ -62,8 +58,6 @@ complexity:
 
 ## Task 2
 
----
-
 ### How to run it?
 
 - Uncomment code between `# --- execution ---` marks
@@ -80,8 +74,6 @@ As one can see, the transformation is performed and no pixels are lost (I used b
 neighbor). In this case, the centre of coordinate system (point (0,0)) is in the top left corner.
 
 ## Task 3
-
----
 
 ### How to run it?
 
@@ -107,8 +99,6 @@ where `homography_matrix` is input and `M` is a recovered matrix.
 
 ## Task 4
 
----
-
 ### How to run it?
 
 - Uncomment code between `# --- execution ---` marks
@@ -126,8 +116,6 @@ A transformed image looks good as well
 ![img_7.png](img_7.png)
 
 ## Task 5
-
----
 
 ### How to run it
 
@@ -150,8 +138,6 @@ After uncommenting a fragment in `stitch` function (~line 348), one can see wher
 
 ## Task 6
 
----
-
 ### How to run it?
 
 - Uncomment code between `# --- execution ---` marks
@@ -165,8 +151,6 @@ Once again, the results are pretty good. Personally, I can't spot a difference b
 ![img_10.png](img_10.png)
 
 ## Task 7
-
----
 
 ### How to run it?
 
