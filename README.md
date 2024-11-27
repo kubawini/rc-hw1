@@ -1,5 +1,7 @@
 # Image stitcher
 
+---
+
 ## Prerequsities
 
 Following project is first homework for Robot Control course at MIMUW faculty (2024/25). Below there is presented a
@@ -8,19 +10,22 @@ description of how to run each task followed by discussion of results. Let's sta
 - I used `Python 3.11`.
 - All dependencies are listed in `requirements.txt` file.
 
-Each task starts after `### Task {i} ###` comment. To run task `i`, you have to uncomment whole code
-between `### Task {i} ###` and `### Task {i+1} ###` comments and possibly some functions from previous steps if
-mentioned in this
-file.
+Each task starts after `### Task {i} ###` comment. To run task `i`, you have to uncomment code
+between `# --- execution ---` marks between `### Task {i} ###` and `### Task {i+1} ###` and possibly some other
+functions if mentioned.
 
 ## Task 1
 
+---
+
 ### How to run?
 
-- Uncomment the code between `### Task 1 ###` and `### Task 2 ###` comments. You can mark the code with your mouse and
-  press `Ctrl + /` if you're using PyCharm.
+- Uncomment the code between `# --- execution ---` marks. You can select the code with your mouse and
+  press `Ctrl + /` if you're using PyCharm or VSC.
 - After that, a piece of code between `# ---- Long computations ----` marks will still be commented. Leave it as it is,
   because these computations take a lot of time and results are described below.
+- Run the script
+- Comment code between `# --- execution ---`
 
 ### Discussion of results
 
@@ -57,9 +62,13 @@ complexity:
 
 ## Task 2
 
+---
+
 ### How to run it?
 
-- Uncomment code from task 2
+- Uncomment code between `# --- execution ---` marks
+- Run the script
+- Comment code between `# --- execution ---` marks
 
 ### Discussion of results
 
@@ -72,9 +81,13 @@ neighbor). In this case, the centre of coordinate system (point (0,0)) is in the
 
 ## Task 3
 
+---
+
 ### How to run it?
 
-- Uncomment code from task 3
+- Uncomment code between `# --- execution ---` marks
+- Run the script
+- Comment code between `# --- execution ---` marks
 
 ### Discussion of results
 
@@ -94,12 +107,13 @@ where `homography_matrix` is input and `M` is a recovered matrix.
 
 ## Task 4
 
+---
+
 ### How to run it?
 
-- Uncomment code from task 4
-- Uncomment `find_transformation_matrix` function (~line 183)
-- Uncomment `generate_2_rows_of_A` function (~line 178)
-- Uncomment Task 2 (~line 126), apart from part marked by `# ---- execution ----` comment
+- Uncomment code between `# --- execution ---` marks
+- Run the script
+- Comment code between `# --- execution ---` marks
 
 # Discussion of results
 
@@ -112,3 +126,55 @@ A transformed image looks good as well
 ![img_7.png](img_7.png)
 
 ## Task 5
+
+---
+
+### How to run it
+
+- Uncomment code between `# --- execution ---` marks
+- Make cure you have included the `matches` folder
+- Run the script
+- Comment code between `# --- execution ---` marks
+
+### Discussion of results
+
+As a result we obtain following image:
+
+![img_8.png](img_8.png)
+
+The cutting line is hardly visible, so the algorithm served its purpose.
+After uncommenting a fragment in `stitch` function (~line 348), one can see wher the line was drawn.
+
+![img_9.png](img_9.png)
+
+## Task 6
+
+---
+
+### How to run it?
+
+- Uncomment code between `# --- execution ---` marks
+- Run the script
+- Comment code between `# --- execution ---` marks
+
+### Discussion of results
+
+Once again, the results are pretty good. Personally, I can't spot a difference between images generated in task 5 and 6.
+
+![img_10.png](img_10.png)
+
+## Task 7
+
+---
+
+### How to run it?
+
+- Uncomment code between `# --- execution ---` marks
+- Run the script
+- Comment code between `# --- execution ---` marks
+
+### Discussion of results
+
+The implemented algorithm worked correctly. Below I present a panorama that consists of five images.
+
+![img_11.png](img_11.png)
