@@ -115,6 +115,13 @@ def transform_shape(x_cart, y_cart, transformation_matrix):
     return (round(max_x - min_x), round(max_y - min_y), round(x0), round(y0)) # TODO round it
 
 
+def transform_corners(img, transformation):
+    v = np.array([[img.shape[1], img.shape[0], 1], [0, 0, 1], [0, img.shape[0], 1], [img.shape[1], 0, 1]])
+    res = transformation @ v.T
+    res_norm = (res / res[2]).T
+    return [res_norm[0, :2], res_norm[1, :2], res_norm[2, :2], res_norm[3, :2],]
+
+
 def project_img(img, transformation):
     inv_transf = np.linalg.inv(transformation)
     width, height, x0, y0 = transform_shape(img.shape[1], img.shape[0], transformation)
@@ -130,7 +137,8 @@ def project_img(img, transformation):
             p1 = np.array(p1 / p1[2], dtype=np.int_)
             if input_width > p1[0] >= 0 and 0 <= p1[1] < input_height:
                 result_img[y, x] = img[p1[1], p1[0]]
-    return result_img, x0, y0
+    corners = transform_corners(img, transformation)
+    return result_img, x0, y0, corners
 #
 #
 # img1 = cv2.imread(f"calibration/calibration_img1.png")
@@ -296,7 +304,7 @@ def find_cutting_line(img1, img2_transformed, ops):
     return list(reversed(result))
 
 
-def stitch(img1, img2_transformed, bps, ops, line, c):
+def stitch(img1, img2_transformed, bps, ops, line):
     result_img = np.zeros(img2_transformed.shape, dtype=np.uint8)
     result_img[:, bps[0]:ops[0]] = img1[:, bps[0]:ops[0]]
     result_img[:, ops[1] + 1:bps[1]] = img2_transformed[:, ops[1] + 1:bps[1]]
@@ -312,6 +320,8 @@ def stitch(img1, img2_transformed, bps, ops, line, c):
         for j in range(ops[0], ops[1] + 1):
             if j < line[diffs_i]:
                 result_img[i, j] = img1[i, j]
+            elif j == line[diffs_i]:
+                result_img[i, j] = [0, 0, 255] # TODO - delete this
             else:
                 result_img[i, j] = img2_transformed[i, j]
 
@@ -328,6 +338,8 @@ def reshape_img(img, shape, x0, y0):
     result = np.zeros(shape, dtype=np.uint8)
     result[y0-img.shape[0]:y0, x0:x0+img.shape[1]] = img
     return result
+
+
 
 def stitch_images_manual(img1, img2, pts1, pts2):
     homography_matrix = find_transformation_matrix(pts1, pts2)
@@ -408,24 +420,82 @@ def find_homography_matrix_from_file(path):
 
 
 def create_panorama(imgs, matrices):
-    transformed_images = transform_all_images(imgs, matrices)
-    for image in transformed_images:
-        cv2.imshow('img', image)
-        cv2.waitKey(0)
+    transformed_images, p0s, corners = transform_all_images(imgs, matrices)
+    img = transformed_images[0]
+    p0 = p0s[0]
+    c = corners[0]
+    for i in range(1, len(images)):
+        img, p0, c = stitch_task_7(img, transformed_images[i], p0, c, p0s[i], corners[i])
+
+    cv2.imshow('img', img)
+    cv2.waitKey(0)
+
+
+def stitch_task_7(img1, img2, img1_p0, img1_corners, img2_p0, img2_corners):
+    points = img1_corners + img2_corners
+    b1, b2, b3, b4 = find_stitched_boundaries(points)
+    o1, o2, o3, o4 = find_overlapping_boundaries(points)
+
+    shape, p0, corners = result_shape(img1, img2, img1_p0, img2_p0)
+    img1 = reshape_img_task_7(img1, shape, p0, img1_p0)
+    img2 = reshape_img_task_7(img2, shape, p0, img2_p0)
+
+    bps = real_world_to_img_list([(b1, b3), (b2, b4)], p0) # TODO zmienić chyba kolejność, bo ta funkcja psuje
+    bps = [bps[0][1], bps[1][1], bps[0][0], bps[1][0]]
+    ops = real_world_to_img_list([(o1, o3), (o2, o4)], p0)
+    ops = [ops[0][1], ops[1][1], ops[0][0], ops[1][0]]
+
+    line = find_cutting_line(img1, img2, ops)
+    result_img = stitch(img2, img1, bps, ops, line)
+    return result_img, p0, corners
+
+
+def reshape_img_task_7(img, shape, p0, img_p0):
+    result = np.zeros(shape, dtype=np.uint8)
+    result[p0[0]-img_p0[0]:p0[0]-img_p0[0]+img.shape[0],
+        p0[1]-img_p0[1]:p0[1]-img_p0[1]+img.shape[1]] = img
+    return result
+
+
+def result_shape(img1, img2, p0_img1, p0_img2):
+    max_x = max(img1.shape[1] - p0_img1[1], img2.shape[1] - p0_img2[1])
+    min_x = min(-p0_img1[1], -p0_img2[1])
+    width = max_x - min_x
+    max_y = max(p0_img1[0], p0_img2[0])
+    min_y = min(p0_img1[0] - img1.shape[0], p0_img2[0] - img2.shape[0])
+    height = max_y - min_y
+    p0 = [max_y, -min_x]
+    dummy = np.zeros((height, width, 3), dtype=np.uint8)
+    corners = [(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y)]
+    return dummy.shape, p0, corners
 
 
 def transform_all_images(imgs, matrices):
     middle = int(len(imgs) / 2)
     transformed_images = [None for _ in range(len(imgs))]
+    p0s = [None for _ in range(len(imgs))]
+    corners = [None for _ in range(len(imgs))]
     matrix = np.eye(3)
     for i in range(middle, len(imgs)):
         matrix = matrices[i] @ matrix
-        transformed_images[i], _, _ = project_img(imgs[i], matrix) # TODO will need x0 and y0
+        transformed_images[i], x0, y0, corners[i] = project_img(imgs[i], matrix)
+        p0s[i] = np.array([y0, x0])
     matrix = np.eye(3)
     for i in reversed(range(0, middle)):
         matrix = matrices[i] @ matrix
-        transformed_images[i], _, _ = project_img(imgs[i], matrix) # TODO
-    return transformed_images
+        transformed_images[i], x0, y0, corners[i] = project_img(imgs[i], matrix)
+        p0s[i] = np.array([y0, x0])
+    return transformed_images, p0s, corners
+
+
+def real_world_to_img(real_coordinates, p0):
+    return p0[0] - 1 - real_coordinates[1], p0[1] + real_coordinates[0]
+
+def real_world_to_img_list(real_coordinates_list, p0):
+    result = []
+    for c in real_coordinates_list:
+        result.append(real_world_to_img(c, p0))
+    return result
 
 
 files = ['undistorted/img2.png',
