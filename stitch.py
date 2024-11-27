@@ -249,8 +249,8 @@ def find_overlapping_boundaries(points):
     sort_y = points.copy()
     sort_x.sort(key=lambda p: p[0])
     sort_y.sort(key=lambda p: p[1])
-    xb, xe = sort_x[3][0], sort_x[4][0]
-    ye, yb = sort_y[3][1], sort_y[4][1]
+    xb, xe = sort_x[2][0], sort_x[5][0]
+    ye, yb = sort_y[2][1], sort_y[5][1]
     return int(xb), int(xe), int(yb), int(ye)
 
 
@@ -265,7 +265,10 @@ def find_cutting_line(img1, img2_transformed, ops):
                 green = abs(float(img1[i,j,1]) - float(img2_transformed[i,j,1]))
                 blue = abs(float(img1[i,j,0]) - float(img2_transformed[i,j,0]))
                 sum = 0.3 * red + 0.59 * green + 0.11 * blue
-                diffs[diffs_i, diffs_j] = sum**2
+                if np.all(img1[i,j] == 0) or np.all(img2_transformed[i,j] == 0):
+                    diffs[diffs_i, diffs_j] = float('inf')
+                else:
+                    diffs[diffs_i, diffs_j] = sum**2
 
     costs = np.zeros((ops[3] - ops[2], ops[1] - ops[0]))
     costs[0, :] = diffs[0, :]
@@ -275,19 +278,19 @@ def find_cutting_line(img1, img2_transformed, ops):
             diffs_j = j - ops[0]
             prev_left = float('inf')
             if j > ops[0]:
-                prev_left = diffs[diffs_i - 1, diffs_j - 1]
+                prev_left = costs[diffs_i - 1, diffs_j - 1]
             prev_right = float('inf')
             if j + 1 < ops[1]:
-                prev_right = diffs[diffs_i - 1, diffs_j + 1]
-            prev_up = diffs[diffs_i - 1, diffs_j]
+                prev_right = costs[diffs_i - 1, diffs_j + 1]
+            prev_up = costs[diffs_i - 1, diffs_j]
             prev = min(prev_left, prev_up, prev_right)
-            if img2_transformed[i, j, 0] != 0:
-                costs[diffs_i, diffs_j] = diffs[diffs_i, diffs_j] + prev
+            costs[diffs_i, diffs_j] = diffs[diffs_i, diffs_j] + prev
 
     result = []
     j = np.argmin(costs[ops[3]-ops[2]-1, :])
     result.append(j)
     for i in reversed(range(ops[2] + 1, ops[3]-1)):
+        a = np.argmin(costs[647,:])
         min_prev_ind = j
         diffs_i = i - ops[2]
         diffs_j = j - ops[0]
@@ -318,11 +321,9 @@ def stitch(img1, img2_transformed, bps, ops, line):
     for i in range(ops[2] + 1, ops[3] + 1):
         diffs_i = i - ops[2] - 2
         for j in range(ops[0], ops[1] + 1):
-            if j < line[diffs_i]:
+            if (j < line[diffs_i] and not np.all(img1[i, j] == 0)) or np.all(img2_transformed[i, j] == 0):
                 result_img[i, j] = img1[i, j]
-            elif j == line[diffs_i]:
-                result_img[i, j] = [0, 0, 255] # TODO - delete this
-            else:
+            elif not np.all(img2_transformed[i, j] == 0):
                 result_img[i, j] = img2_transformed[i, j]
 
     for i in range(ops[3] + 1, result_img.shape[0]):
@@ -331,6 +332,8 @@ def stitch(img1, img2_transformed, bps, ops, line):
                 result_img[i, j] = img2_transformed[i,j]
             else:
                 result_img[i, j] = img1[i,j]
+                
+    # result_img = cv2.rectangle(result_img, (ops[0], ops[2]), (ops[1], ops[3]), (0, 0, 255), 2) # TODO
     return  result_img
 
 
@@ -427,8 +430,8 @@ def create_panorama(imgs, matrices):
     for i in range(1, len(images)):
         img, p0, c = stitch_task_7(img, transformed_images[i], p0, c, p0s[i], corners[i])
 
-    cv2.imshow('img', img)
-    cv2.waitKey(0)
+        cv2.imshow('img', img)
+        cv2.waitKey(0)
 
 
 def stitch_task_7(img1, img2, img1_p0, img1_corners, img2_p0, img2_corners):
