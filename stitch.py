@@ -164,13 +164,14 @@ import os
 #                 result_img[y, x] = img[p1[1], p1[0]]
 #     corners = transform_corners(img, transformation)
 #     return result_img, x0, y0, corners
-#
-#
+
+# # ---- execution ----
 # img1 = cv2.imread(f"undistorted/img1.png")
 # transformation_matrix = np.array([[0.7071, 0.7071, 200], [-0.7071, 0.7071, 10], [0, 0.001, 2]])
 # result_img, _, _, _ = project_img(img1, transformation_matrix)
 # cv2.imshow('Task2', result_img)
 # cv2.waitKey(0)
+# # ---- execution ----
 
 
 # ## Task 3 ###
@@ -228,16 +229,16 @@ import os
 
 ### Task 4 ###
 # img1 = cv2.imread('stitching/img1.png')
-
-img1_pts = [[295, 392], [457, 295], [771, 346], [1065, 464], [981, 380], [790, 703]]
-img2_pts = [[420, 384], [569, 290], [880, 340], [1192, 463], [1102, 375], [899, 703]]
+#
+# img1_pts = [[295, 392], [457, 295], [771, 346], [1065, 464], [981, 380], [790, 703]]
+# img2_pts = [[420, 384], [569, 290], [880, 340], [1192, 463], [1102, 375], [899, 703]]
 #
 # homography_matrix = find_transformation_matrix(img1_pts, img2_pts)
-# # homography_matrix = np.array([[2,0,0],[0,2,0],[0,0,2]])
 #
-# # homography_matrix = np.array([[1, 0, 100], [0, 1, 100], [0, 0, 1]])
-# img = project_img(img1, homography_matrix)
-# cv2.imshow('img', img)
+# print('----- Obtained homography matrix -----')
+# print(homography_matrix)
+# img, _, _, _ = project_img(img1, homography_matrix)
+# cv2.imshow('Task4', img)
 # cv2.waitKey(0)
 
 ### Task 5 ###

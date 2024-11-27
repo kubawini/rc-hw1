@@ -59,7 +59,7 @@ complexity:
 
 ### How to run it?
 
-- Uncomment code
+- Uncomment code from task 2
 
 ### Discussion of results
 
@@ -74,18 +74,41 @@ neighbor). In this case, the centre of coordinate system (point (0,0)) is in the
 
 ### How to run it?
 
-- Uncomment code
+- Uncomment code from task 3
 
 ### Discussion of results
 
 This time, the script does not display any visible data. It performs a test that:
+
 - picks a random homography (and normalizes it),
 - computes the matching pairs based on this homography (random number of points - from 4 to 10 for each
-iteration),
+  iteration),
 - checks that the implemented method recovers it.
 
-The process repeats 20 times. The homography matrix is recovered with precision up to 1e-14. The test is performed by following line
+The process repeats 20 times. The homography matrix is recovered with precision up to 1e-14. The test is performed by
+following line
 
 `assert np.all(np.isclose(homography_matrix, M, rtol=1e-14, atol=1e-14))`
 
 where `homography_matrix` is input and `M` is a recovered matrix.
+
+## Task 4
+
+### How to run it?
+
+- Uncomment code from task 4
+- Uncomment `find_transformation_matrix` function (~line 183)
+- Uncomment `generate_2_rows_of_A` function (~line 178)
+- Uncomment Task 2 (~line 126), apart from part marked by `# ---- execution ----` comment
+
+# Discussion of results
+
+After choosing corresponding points (between picture 1 and 2), we obtain a following matrix
+
+![img_6.png](img_6.png)
+
+A transformed image looks good as well
+
+![img_7.png](img_7.png)
+
+## Task 5
