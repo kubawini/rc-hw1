@@ -133,6 +133,7 @@ A transformed image looks good as well
 
 - Uncomment code between `# --- execution ---` marks
 - Make cure you have included the `matches` folder
+- If you want to highlight the cutting line, uncomment a fragment inside `stitch` function (~line 348)
 - Run the script
 - Comment code between `# --- execution ---` marks
 
@@ -143,7 +144,7 @@ As a result we obtain following image:
 ![img_8.png](img_8.png)
 
 The cutting line is hardly visible, so the algorithm served its purpose.
-After uncommenting a fragment in `stitch` function (~line 348), one can see wher the line was drawn.
+After uncommenting a fragment in `stitch` function (~line 348), one can see where the line was drawn.
 
 ![img_9.png](img_9.png)
 
