@@ -45,7 +45,7 @@ import os
 #     return rect_img.copy()
 #
 #
-# def undistort_everything(camera_mat, distortion):  # TODO USE it
+# def undistort_everything(camera_mat, distortion):
 #     images = [cv2.imread(f'stitching/img{i}.png') for i in range(1, 10)]
 #     os.makedirs('undistorted', exist_ok=True)
 #     for i in range(len(images)):
@@ -137,7 +137,7 @@ import os
 #     min_y = min(min_y, 0)
 #     max_y = max(max_y, y_cart)
 #     y0 = max_y
-#     return (round(max_x - min_x), round(max_y - min_y), round(x0), round(y0))
+#     return round(max_x - min_x), round(max_y - min_y), round(x0), round(y0)
 #
 #
 # def transform_corners(img, transformation):
@@ -166,22 +166,19 @@ import os
 #     return result_img, x0, y0, corners
 #
 #
-# img1 = cv2.imread(f"calibration/calibration_img1.png")
-# transformation_matrix = np.array([[0.7071, 0.7071, 200], [-0.7071, 0.7071, 200], [0, 0.001, 2]])
-# result_img = project_img(img1, transformation_matrix)
-# cv2.imshow('img', result_img)
+# img1 = cv2.imread(f"undistorted/img1.png")
+# transformation_matrix = np.array([[0.7071, 0.7071, 200], [-0.7071, 0.7071, 10], [0, 0.001, 2]])
+# result_img, _, _, _ = project_img(img1, transformation_matrix)
+# cv2.imshow('Task2', result_img)
 # cv2.waitKey(0)
-#
-# '''
-# Conclusion
-# '''
-#
+
+
 # ## Task 3 ###
 # def generate_2_rows_of_A(pt_s, pt_d):
 #     return np.array([[pt_s[0], pt_s[1], 1, 0, 0, 0, -pt_d[0] * pt_s[0], -pt_d[0] * pt_s[1], -pt_d[0]],
 #                     [0, 0, 0, pt_s[0], pt_s[1], 1, -pt_d[1] * pt_s[0], -pt_d[1] * pt_s[1], -pt_d[1]]])
-# #
-# #
+#
+#
 # def find_transformation_matrix(pts_s, pts_d):
 #     assert len(pts_s) == len(pts_d)
 #     nr_of_points = len(pts_s)
@@ -192,7 +189,7 @@ import os
 #     eigenvector = V[-1, :]
 #     eigenvector_norm = eigenvector / np.linalg.norm(eigenvector)
 #     return eigenvector_norm.reshape(3, 3)
-
+#
 #
 # def array_of_points_to_list(arr):
 #     result = []
@@ -228,11 +225,6 @@ import os
 #
 # test_3()
 
-###
-'''
-Conslusion
-'''
-###
 
 ### Task 4 ###
 # img1 = cv2.imread('stitching/img1.png')

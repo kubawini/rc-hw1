@@ -58,3 +58,34 @@ complexity:
 ## Task 2
 
 ### How to run it?
+
+- Uncomment code
+
+### Discussion of results
+
+After running the script, following image is displayed:
+
+![img_5.png](img_5.png)
+
+As one can see, the transformation is performed and no pixels are lost (I used backward homography with nearest
+neighbor). In this case, the centre of coordinate system (point (0,0)) is in the top left corner.
+
+## Task 3
+
+### How to run it?
+
+- Uncomment code
+
+### Discussion of results
+
+This time, the script does not display any visible data. It performs a test that:
+- picks a random homography (and normalizes it),
+- computes the matching pairs based on this homography (random number of points - from 4 to 10 for each
+iteration),
+- checks that the implemented method recovers it.
+
+The process repeats 20 times. The homography matrix is recovered with precision up to 1e-14. The test is performed by following line
+
+`assert np.all(np.isclose(homography_matrix, M, rtol=1e-14, atol=1e-14))`
+
+where `homography_matrix` is input and `M` is a recovered matrix.
